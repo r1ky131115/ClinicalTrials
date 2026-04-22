@@ -1,0 +1,8 @@
+### Get all trials
+Get http://localhost:5103/api/clinicaltrials
+
+### Get trial by id
+Get http://localhost:5103/api/clinicaltrials/id?Id=1
+
+### Get non-existent trial
+Get http://localhost:5103/api/ClinicalTrials/id?Id=888
