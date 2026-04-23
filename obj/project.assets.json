@@ -447,31 +447,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ricar\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\ricardo\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Documentos\\craftlabs-prep\\ClinicalTrialsApi\\ClinicalTrialsApi.csproj",
+      "projectUniqueName": "C:\\Users\\ricardo\\OneDrive\\Documentos\\Proyecto de estudio\\ClinicalTrials\\ClinicalTrialsApi.csproj",
       "projectName": "ClinicalTrialsApi",
-      "projectPath": "D:\\Documentos\\craftlabs-prep\\ClinicalTrialsApi\\ClinicalTrialsApi.csproj",
-      "packagesPath": "C:\\Users\\ricar\\.nuget\\packages\\",
-      "outputPath": "D:\\Documentos\\craftlabs-prep\\ClinicalTrialsApi\\obj\\",
+      "projectPath": "C:\\Users\\ricardo\\OneDrive\\Documentos\\Proyecto de estudio\\ClinicalTrials\\ClinicalTrialsApi.csproj",
+      "packagesPath": "C:\\Users\\ricardo\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\ricardo\\OneDrive\\Documentos\\Proyecto de estudio\\ClinicalTrials\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\ricar\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\ricardo\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -489,8 +482,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.300"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -520,7 +512,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.420/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
