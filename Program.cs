@@ -35,6 +35,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ErrorLoggingMiddleware>();
 
 app.MapControllers();
 app.MapGet("/", () => new { Message = "Hello world" });
