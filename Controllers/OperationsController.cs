@@ -41,4 +41,36 @@ public class OperationsController : ControllerBase
             SingletonOperation2 = _singletonOperation2.OperationId
         });
     }
+
+    [HttpGet("slow-sync")]
+    public IActionResult GetSlotSync()
+    {
+        // Patrón malo: bloquea el hilo
+        Task.Delay(2000).Wait();
+        return Ok(new { Message = "Terminé después de 2 segundos (bloqueando hilo)" });
+    }
+
+    [HttpGet("slow-async")]
+    public async Task<IActionResult> GetSlowAsync()
+    {
+        // Patrón bueno: libera el hilo
+        await Task.Delay(2000);
+
+        return Ok(new { Message = "Terminé después de 2 segundos (sin bloquear)" });
+    }
+
+    [HttpGet("good-pattern")]
+    public async Task<IActionResult> GoodPatternAsync()
+    {
+        var result = await ComputeSomethingAsync();
+
+        return Ok(result);
+    }
+
+    private async Task<object> ComputeSomethingAsync()
+    {
+        await Task.Delay(500);
+
+        return new { Value = 42, ComputedAt = DateTime.UtcNow };
+    }
 }

@@ -1,5 +1,7 @@
 using ClinicalTrialsApi.Middleware;
 using ClinicalTrialsApi.Services;
+using ClinicalTrialsApi.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<ITransientOperation, Operation>();
 builder.Services.AddScoped<IScopedOperation, Operation>();
 builder.Services.AddSingleton<ISingletonOperation, Operation>();
+
+builder.Services.AddDbContext<ClinicalTrialsDbContext>(options =>
+    options.UseSqlite("Data Source=clinicaltrials.db"));
 
 var app = builder.Build();
 

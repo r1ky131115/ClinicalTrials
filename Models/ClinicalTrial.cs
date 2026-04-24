@@ -8,4 +8,7 @@ public class ClinicalTrial
     public int PatientCount { get; set; }
     public string Status { get; set; } = string.Empty; // "Recruiting", "Active", "Completed"
     public DateTime StartDate { get; set; }
+
+    // Relación: un trial tiene muchos pacientes
+    public List<Patient> Patients { get; set; } = new ();
 }
