@@ -1,5 +1,7 @@
 using ClinicalTrialsApi.Data;
 using ClinicalTrialsApi.Models;
+using ClinicalTrialsApi.Models.Dtos;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,10 +12,12 @@ namespace ClinicalTrialsApi.Controllers;
 public class ClinicalTrialsController: ControllerBase
 {
     private readonly ClinicalTrialsDbContext _context;
+    private readonly IValidator<CreateClinicalTrialDto> _createValidator;
 
-    public ClinicalTrialsController(ClinicalTrialsDbContext context)
+    public ClinicalTrialsController(ClinicalTrialsDbContext context, IValidator<CreateClinicalTrialDto> createValidator)
     {
         _context = context;
+        _createValidator = createValidator;
     }
 
     // GET /api/clinicaltrials
@@ -43,8 +47,34 @@ public class ClinicalTrialsController: ControllerBase
 
     // POST /api/clinicaltrials
     [HttpPost]
-    public async Task<ActionResult<ClinicalTrial>> Create(ClinicalTrial trial)
+    public async Task<ActionResult<ClinicalTrial>> Create(CreateClinicalTrialDto dto)
     {
+        // 1. Validar el DTO usando FluentValidation
+        var validationResult = await _createValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+        {
+            // Convertimos los errores a un formato {"PropertyName": ["Error1", "Error2"]}
+            var errors = validationResult.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+
+            return ValidationProblem(new ValidationProblemDetails(errors));
+        }
+
+        // 2. Si es válido, mapear el DTO a la entidad y guardarla en la base de datos
+        var trial = new ClinicalTrial
+        {
+            Name = dto.Name,
+            Phase = dto.Phase,
+            PatientCount = dto.PatientCount,
+            Status = dto.Status,
+            StartDate = dto.StartDate
+        };
+
+        // 3. Guardar en la base de datos
         _context.ClinicalTrials.Add(trial);
         await _context.SaveChangesAsync();
 
@@ -84,5 +114,20 @@ public class ClinicalTrialsController: ControllerBase
         _context.ClinicalTrials.Remove(trial);
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [ApiExplorerSettings(IgnoreApi = true)]
+    [HttpGet("test-error/{type}")]
+    public IActionResult TestError(string type)
+    {
+        return type switch
+        {
+            "notfound" => throw new KeyNotFoundException("El recurso no fue encontrado"),
+            "unauthorized" => throw new UnauthorizedAccessException("No tienes permiso para acceder a este recurso"),
+            "badrequest" => throw new ArgumentException("El argumento proporcionado es inválido"),
+            "invalid" => throw new InvalidOperationException("La operación solicitada no es válida en el estado actual"),
+            "bug" => throw new NullReferenceException("Algo explotó inesperadamente"),
+            _ => Ok(new { Message = "Tipos válidos: notfound, unauthorized, invalid, bug" })
+        };
     }
 }
