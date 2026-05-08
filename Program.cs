@@ -1,9 +1,12 @@
 using ClinicalTrialsApi.Services;
 using ClinicalTrialsApi.Data;
 using Microsoft.EntityFrameworkCore;
-using ClinicalTrialsApi.Models;
 using FluentValidation;
 using ClinicalTrialsApi.ExceptionHandling;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
 
 // 1. Crea el "builder" obejto que sirve para configurar la app antes de construirla.
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +21,8 @@ builder.Services.AddTransient<ITransientOperation, Operation>();
 builder.Services.AddScoped<IScopedOperation, Operation>();
 builder.Services.AddSingleton<ISingletonOperation, Operation>();
 
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 builder.Services.AddDbContext<ClinicalTrialsDbContext>(options =>
     options.UseSqlite("Data Source=clinicaltrials.db"));
 
@@ -25,6 +30,41 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // Busca todos 
 
 builder.Services.AddProblemDetails(); // Habilita el formato RFC 7807 para errores HTTP, lo que facilita la gestión de errores en el cliente.
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>(); // Registra el manejador global de excepciones, que se encargará de capturar y manejar cualquier excepción no controlada en la aplicación.
+
+
+// --- AGREGAR EN Program.cs ---
+builder.Services.AddIdentityCore<IdentityUser>(options => {// Configuración de Password
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 4;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+
+    // Configuración de Usuario
+    options.User.RequireUniqueEmail = true;
+})
+.AddEntityFrameworkStores<ClinicalTrialsDbContext>();
+
+// 1.1. Obtener settings de JWT
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
+
+// 1.2. Configurar el servicio de Autenticación
+builder.Services.AddAuthentication(options => {
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => {
+    options.TokenValidationParameters = new TokenValidationParameters {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
 
 // Configuracion de CORS para permitir solicitudes desde el frontend (Angular).
 const string AngularCorsPolicy = "AngularCorsPolicy";
@@ -55,6 +95,7 @@ app.UseCors(AngularCorsPolicy); // Aplica la política de CORS definida anterior
 
 // Middleware de seguridad y autorización (comentado para desarrollo)
 // app.UseHttpsRedirection(); // Redirige automáticamente las solicitudes HTTP a HTTPS, lo que mejora la seguridad de la aplicación.
+app.UseAuthentication(); // Habilita la autenticación, lo que permite que la aplicación valide los tokens JWT en las solicitudes entrantes.
 app.UseAuthorization(); // Expone la UI de Swagger solo en desarrollo.
 
 // Middleware simple que agrega un header custom a todas las responses
@@ -70,34 +111,36 @@ app.Use(async (context, next) =>
 app.MapControllers(); // Mapea las rutas a los controladores, lo que permite que las solicitudes HTTP se dirijan a los métodos de acción correspondientes en los controladores.
 app.MapGet("/", () => new { Message = "Hello world" });
 
+#region MINIMAL API TEST 
 // =====================================================
 // Ejemplo Minimal API: endpoints paralelos en /minimal
 // =====================================================
-var minimalGroup = app.MapGroup("/minimal/clinicaltrials")
-    .WithTags("Minimal API - Clinical Trials");
+// var minimalGroup = app.MapGroup("/minimal/clinicaltrials")
+//     .WithTags("Minimal API - Clinical Trials");
 
-minimalGroup.MapGet("/", async (ClinicalTrialsDbContext db) =>
-{
-    var trials = await db.ClinicalTrials.AsNoTracking().ToListAsync();
-    return Results.Ok(trials);
-});
+// minimalGroup.MapGet("/", async (ClinicalTrialsDbContext db) =>
+// {
+//     var trials = await db.ClinicalTrials.AsNoTracking().ToListAsync();
+//     return Results.Ok(trials);
+// });
 
-minimalGroup.MapGet("/{id:int}", async (int id, ClinicalTrialsDbContext db) =>
-{
-    var trial = await db.ClinicalTrials.AsNoTracking()
-        .FirstOrDefaultAsync(t => t.Id == id);
+// minimalGroup.MapGet("/{id:int}", async (int id, ClinicalTrialsDbContext db) =>
+// {
+//     var trial = await db.ClinicalTrials.AsNoTracking()
+//         .FirstOrDefaultAsync(t => t.Id == id);
 
-    return trial is not null 
-        ? Results.Ok(trial) 
-        : Results.NotFound();
-});
+//     return trial is not null 
+//         ? Results.Ok(trial) 
+//         : Results.NotFound();
+// });
 
-minimalGroup.MapPost("/", async (ClinicalTrial trial, ClinicalTrialsDbContext db) =>
-{
-    db.ClinicalTrials.Add(trial);
-    await db.SaveChangesAsync();
-    return Results.Created($"/minimal/clinicaltrials/{trial.Id}", trial);
-});
+// minimalGroup.MapPost("/", async (ClinicalTrial trial, ClinicalTrialsDbContext db) =>
+// {
+//     db.ClinicalTrials.Add(trial);
+//     await db.SaveChangesAsync();
+//     return Results.Created($"/minimal/clinicaltrials/{trial.Id}", trial);
+// });
+#endregion
 
 // 5. Ejecuta la aplicación, lo que inicia el servidor web y comienza a escuchar las solicitudes entrantes.
 app.Run();

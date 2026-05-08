@@ -1,10 +1,11 @@
 using ClinicalTrialsApi.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace ClinicalTrialsApi.Data
 {
-    public class ClinicalTrialsDbContext : DbContext
+    // Cambiamos la herencia a IdentityDbContext
+    public class ClinicalTrialsDbContext : IdentityDbContext
     {
         public ClinicalTrialsDbContext(DbContextOptions<ClinicalTrialsDbContext> options) : base(options)
         {
@@ -15,7 +16,8 @@ namespace ClinicalTrialsApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configuración fluida: definimos campos obligatorios, longitudes, etc.
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<ClinicalTrial>(entity =>
             {
                 entity.Property(t => t.Name).IsRequired().HasMaxLength(100);
