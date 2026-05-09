@@ -1,6 +1,7 @@
 using ClinicalTrialsApi.Models.Dtos;
 using ClinicalTrialsApi.Services;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,6 +25,7 @@ public class AuthController: ControllerBase
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [AllowAnonymous]
     public async Task<ActionResult> Register(RegisterDto dto)
     {
         var validationResult = await _createValidator.ValidateAsync(dto);
@@ -48,6 +50,7 @@ public class AuthController: ControllerBase
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);

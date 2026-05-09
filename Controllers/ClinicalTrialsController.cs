@@ -2,6 +2,7 @@ using ClinicalTrialsApi.Data;
 using ClinicalTrialsApi.Models;
 using ClinicalTrialsApi.Models.Dtos;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace ClinicalTrialsApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ClinicalTrialsController: ControllerBase
 {
     private readonly ClinicalTrialsDbContext _context;

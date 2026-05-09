@@ -1,12 +1,13 @@
-using ClinicalTrialsApi.Services;
 using ClinicalTrialsApi.Data;
-using Microsoft.EntityFrameworkCore;
-using FluentValidation;
 using ClinicalTrialsApi.ExceptionHandling;
-using System.Text;
+using ClinicalTrialsApi.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 // 1. Crea el "builder" obejto que sirve para configurar la app antes de construirla.
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,36 @@ var builder = WebApplication.CreateBuilder(args);
 //Esto permite que los controladores y otros componentes puedan solicitar estas dependencias a través de sus constructores.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ClinicalTrialsApi", Version = "v1" });
+
+    // Configuración para usar JWT en Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header usando el esquema Bearer."
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 builder.Services.AddTransient<ITransientOperation, Operation>();
 builder.Services.AddScoped<IScopedOperation, Operation>();
@@ -32,8 +62,8 @@ builder.Services.AddProblemDetails(); // Habilita el formato RFC 7807 para error
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>(); // Registra el manejador global de excepciones, que se encargará de capturar y manejar cualquier excepción no controlada en la aplicación.
 
 
-// --- AGREGAR EN Program.cs ---
-builder.Services.AddIdentityCore<IdentityUser>(options => {// Configuración de Password
+builder.Services.AddIdentityCore<IdentityUser>(options => {
+    // Configuración de Password
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 4;
     options.Password.RequireNonAlphanumeric = false;
