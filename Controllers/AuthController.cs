@@ -28,24 +28,30 @@ public class AuthController: ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult> Register(RegisterDto dto)
     {
+        // 1. Validación de FluentValidation
         var validationResult = await _createValidator.ValidateAsync(dto);
         if (!validationResult.IsValid)
         {
-            var errors = validationResult.Errors
-                .GroupBy(e => e.PropertyName)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(e => e.ErrorMessage).ToArray()
-                );
-
-            return ValidationProblem(new ValidationProblemDetails(errors));
+            return MapFluentErrors(validationResult);
         }
 
-        var user = new IdentityUser { UserName = dto.Email, Email = dto.Email };
+        var user = new IdentityUser { UserName = dto.UserName, Email = dto.Email };
         var result = await _userManager.CreateAsync(user, dto.Password);
 
-        if (!result.Succeeded) 
-            return BadRequest(result.Errors);
+        // 2. Validación de Identity (Mapeamos a ValidationProblem)
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                // Mapeamos códigos de Identity a nombres de propiedades del DTO
+                var key = error.Code.Contains("Email") || error.Code.Contains("UserName") ? "Email" :
+                        error.Code.Contains("Password") ? "Password" : "General";
+                
+                ModelState.AddModelError(key, error.Description);
+            }
+            return ValidationProblem(ModelState);
+        }
+
         return Created();
     }
 
@@ -61,8 +67,19 @@ public class AuthController: ControllerBase
         return Ok(
             new AuthResponseDto(
                 token, 
+                user.Id,
+                user.UserName!,
                 user.Email!, 
                 DateTime.UtcNow.AddMinutes(60))
         );
+    }
+    
+    private ActionResult MapFluentErrors(FluentValidation.Results.ValidationResult result)
+    {
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+        }
+        return ValidationProblem(ModelState);
     }
 }

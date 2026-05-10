@@ -14,6 +14,10 @@ namespace ClinicalTrialsApi.Validators
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("La contraseña es obligatoria")
                 .MinimumLength(4).WithMessage("Debe tener al menos 4 caracteres");
+
+            RuleFor(x => x.UserName)
+                .NotEmpty().WithMessage("El nombre de usuario es obligatorio")
+                .MinimumLength(4).WithMessage("Debe tener al menos 4 caracteres");
         }
     }
 }
