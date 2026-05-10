@@ -60,8 +60,15 @@ public class AuthController: ControllerBase
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
+
         if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
-            return Unauthorized("Credenciales inválidas");
+        {
+            return Problem(
+                detail: "El correo electrónico o la contraseña son incorrectos.",
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Error de autenticación"
+            );
+        }
 
         var token = _tokenService.CreateToken(user);
         return Ok(
